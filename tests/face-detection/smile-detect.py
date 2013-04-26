@@ -61,25 +61,31 @@ def DetectRedEyes(image, faceCascade, smileCascade):
 
     # If faces are found
     if faces:
+        
+        #print faces
+
         for ((x, y, w, h), n) in faces:
         # the input to cv.HaarDetectObjects was resized, so scale the
         # bounding box of each face and convert it to two CvPoints
             pt1 = (int(x * image_scale), int(y * image_scale))
             pt2 = (int((x + w) * image_scale), int((y + h) * image_scale))
+            print pt1
+            print pt2
             cv.Rectangle(image, pt1, pt2, cv.RGB(255, 0, 0), 1, 8, 0)
-            cv.Rectangle(image, ((pt1[0]),pt1[1]*2), pt2, cv.RGB(0,255,0), 1, 8, 0)
             cv.PutText(image, "face", pt1, font, cv.RGB(255, 0, 0))
             face_region = cv.GetSubRect(image,(x,int(y + (h/4)),w,int(h/2)))
 
+        #split face
+        cv.Rectangle(image, (pt1[0],(pt1[1] + (abs(pt1[1]-pt2[1]) / 2 ))), pt2, cv.RGB(0,255,0), 1, 8, 0)
         cv.SetImageROI(image, (pt1[0],
-            pt1[1]*2,
-            pt2[0] - pt1[0],
-            int((pt2[1] - pt1[1]) * 0.7)))
+                               (pt1[1] + (abs(pt1[1]-pt2[1]) / 2 )),
+                               pt2[0] - pt1[0],
+                               int((pt2[1] - (pt1[1] + (abs(pt1[1]-pt2[1]) / 2 ))))))
             
         smiles = cv.HaarDetectObjects(image, smileCascade, cv.CreateMemStorage(0), 1.1, 5, 0, (15,15))
         
         if smiles:
-            print smiles
+            #print smiles
             
             for smile in smiles:
                 cv.Rectangle(image,
