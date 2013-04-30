@@ -5,24 +5,56 @@
 
 
 //SmileLine[] smiles = new SmileLine[];
+//import se.goransson.mqtt.*;
+
+//MQTT mqtt;
+
 ArrayList smiles;
 ArrayList triangles;
 
 int width = 1280;
-int height = 720;
+int height = 720 / 2;
 float theScale = 1;
+
+int segmentCount = 0;
+int maxAnimation = 60;
+int frames = 30;
+
+PFont font;
+
+boolean firstDraw = true;
+
+//MQTT Parameters
+private MQTTLib m;
+private String MQTT_BROKER ="tcp://localhost:1883";
+private String CLIENT_ID = "TestProcessing";
+private int[] QOS = {1};
+private String[] TOPICS = {"smiles"};
+private boolean CLEAN_START = true;
+private short KEEP_ALIVE = 30;
+
 
 void setup(){
 
  size(width, height);
  background(0);
- frameRate(12);
+ frameRate(frames);
+ 
+ font = loadFont("HelveticaNeue-Light-48.vlw");
  
  smiles = new ArrayList();
  
- //l1.init(100,200);
- smiles.add(new SmileLine(100,200,100));
+ m = new MQTTLib(MQTT_BROKER, new MessageHandler());
+ m.connect(CLIENT_ID, CLEAN_START, KEEP_ALIVE);
+ m.subscribe(TOPICS, QOS);
  
+ //l1.init(100,200);
+ //smiles.add(new SmileLine(100,200,100));
+ 
+ //mqtt = new MQTT( this );
+ //#mqtt.connect( "127.0.0.1", 1883, "mqtt_receiver" );
+ //mqtt.DEBUG = true;
+ //mqtt.subscribe("aSmile","gotSmile");
  
  triangles = new ArrayList();
  //triangles.add(new SmileTriangle(100,100));
@@ -32,7 +64,12 @@ void setup(){
 }
 
 void draw(){
+  //if (firstDraw == true){
+    //mqtt.subscribe("smiles","gotSmile");
+    firstDraw = false;
+  //}
   scale(theScale);
+  //translate(50,height/2);
   background(39,39,38);
   smooth();
 
@@ -42,20 +79,32 @@ void draw(){
   //l1.addSmile();
   
   //loop through and display
-  for(int i = 1; i <= smiles.size(); i++){
-    //print(i);
+  /*for(int i = 1; i <= smiles.size(); i++){
     SmileLine smile = (SmileLine) smiles.get(i - 1);
     smile.update();
-    //if (i == smiles.size()){
-        //smile.addSmile();
-    //}
-    
-    
-  }
+  }*/
   
   for(int i = 1; i <= triangles.size(); i++){
     SmileTriangle smile = (SmileTriangle) triangles.get(i - 1);
-    smile.update();    
+    smile.draw();
+    
+    if((i == triangles.size()) && (segmentCount < maxAnimation)){
+        //smile.update();
+        //if(segmentCount < 24){
+            segmentCount++;
+            //println(segmentCount);
+            smile.drawSegment(segmentCount);
+            //textFont(font, 32);
+            //text("harvesting", (width/2) - 200, (height/2) - 200);
+            //stroke(255,255,255,127);
+            noStroke();
+            fill(255,255,255,(255 - ((255/maxAnimation)*segmentCount)));
+            rect(0, 0, width, height);
+            
+        //}
+    }
+        
+        
   }
   
   //test sin wave
@@ -76,27 +125,51 @@ for(int i=0; i<=width; i=i+4) {
 }
 
 void keyPressed() {
-    SmileLine smile = (SmileLine) smiles.get(smiles.size()-1);
-    smile.addSmile();
+    //SmileLine smile = (SmileLine) smiles.get(smiles.size()-1);
+    //smile.addSmile();
     
-    SmileTriangle tri = (SmileTriangle) triangles.get(triangles.size()-1);
-    tri.addAlignedTriangle();
+    createSmile();
     
     //theScale = theScale - 0.01;
+     //mqtt.subscribe("smiles","gotSmile");
+}
+
+/*void gotSmile(MQTTMessage msg){
+  createSmile();
+  
+  println( msg.toString() );
+  println( new String(msg.payload) );
+}*/
+
+void aSmile(byte[] payload){
+
+  
+  createSmile();
+  
+}
+
+void createSmile(){
+    SmileTriangle tri = (SmileTriangle) triangles.get(triangles.size()-1);
+    tri.addAlignedTriangle();
+    segmentCount = 0;
 }
 
 class SmileTriangle {
     PVector pointA, pointB, pointC;
     int r,g,b;
+    color the_color;
     SmileTriangle(){
-        pointA = new PVector(100,100);
-        pointB = new PVector(200,200);
-        pointC = new PVector(0,200);
+        pointA = new PVector(200,200);
+        pointB = new PVector(300,300);
+        pointC = new PVector(100,300);
         
          //use colors from Nathan's design
+       
        r = 240;
        g = 240;
-       b = 239; 
+       b = 239;
+       the_color = color(r,g,b);
+        
       
     }
     SmileTriangle(int x, int y){
@@ -107,23 +180,54 @@ class SmileTriangle {
         //use colors from Nathan's design
        r = 240;
        g = 240;
-       b = 239;  
+       b = 239;
+       the_color = color(r,g,b);  
     }
     SmileTriangle(int aX, int aY, int bX, int bY){
         pointA = new PVector(aX,aY);
         pointB = new PVector(bX,bY);
-        pointC = new PVector(bX+int(random(100)),int(bY+random(100)));
+        pointC = new PVector(constrain(bX+int(random(-100,100)),0,width),constrain(int(bY+random(-100,100)),0,height));
         
         //use colors from Nathan's design
-       r = 240;
-       g = 240;
-       b = 239;  
+       //r = 240;
+       //g = 240;
+       //b = 239;
+       
+       //r = int(random(215,255));
+       r = int(random(180,255));
+       g = int(random(180,255));
+       b = int(random(180,255));
+       
+       the_color = color(r,g,b);  
     }
-    void update(){
-        stroke(r,g,b);
-        strokeWeight(2);
-        //line(x1,y1,x2,y2); 
+    void _setColors(){
+        stroke(the_color);
+        fill(the_color);
+        strokeWeight(1);
+    }
+    void draw(){
+        _setColors();
         triangle(pointA.x,pointA.y,pointB.x,pointB.y,pointC.x,pointC.y);
+    }
+    void drawSegment(int count){
+        _setColors();
+        //int xTo = int((pointC.x / count) - pointB.x);
+        //int yTo = int((pointC.y / count) - pointB.y);
+        //int xTo = int((pointC.x / count));
+        //int yTo = int((pointC.y / count));
+        PVector to = new PVector();
+        //PVector to2 = new PVector();
+        //to1.sub(pointA,pointC);
+        //to2.sub(pointB,pointC);
+        //int xTo = int((pointC.x / count));
+        //int yTo = int((pointC.y / count));
+        float change =(float(count)/float(maxAnimation));
+        to = PVector.lerp(pointB,pointC,change);
+        //println(change);
+        //print(to);
+        triangle(pointA.x,pointA.y,pointB.x,pointB.y,to.x,to.y);
+        //line(pointA.x,pointA.y,to1.x,to1.y);
+        //line(pointB.x,pointB.y,to2.x,to2.y);
     }
     void addTriangle(){
       triangles.add(new SmileTriangle(int(pointC.x),int(pointC.y)));
@@ -175,5 +279,18 @@ class SmileLine {
       smiles.add(new SmileLine(x2,y2,int(random(255))));
   }
 }
+
+private class MessageHandler implements MqttSimpleCallback {
+public void connectionLost() throws Exception {
+ System.out.println( "Connection has been lost." );
+ //do something here
+ }
+public void publishArrived( String topicName, byte[] payload, int QoS, boolean retained ){
+ String s = new String(payload);
+ //Display the string
+ createSmile();
+ } 
+
+ }
 
 
