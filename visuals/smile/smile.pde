@@ -1,19 +1,8 @@
-//int width = ;
-//int height = 1080;
-
-//SmileLine l1 = new SmileLine(100,200);
-
-
-//SmileLine[] smiles = new SmileLine[];
-//import se.goransson.mqtt.*;
-
-//MQTT mqtt;
-
 ArrayList smiles;
 ArrayList triangles;
 
-int width = 1280;
-int height = 720 / 2;
+int width = 900;
+int height = 360;
 float theScale = 1;
 
 int segmentCount = 0;
@@ -24,6 +13,10 @@ PFont font;
 
 boolean firstDraw = true;
 
+int colorCounter = 0;
+
+color[] colors = new color[4];
+
 //MQTT Parameters
 private MQTTLib m;
 private String MQTT_BROKER ="tcp://localhost:1883";
@@ -32,6 +25,9 @@ private int[] QOS = {1};
 private String[] TOPICS = {"smiles"};
 private boolean CLEAN_START = true;
 private short KEEP_ALIVE = 30;
+
+
+
 
 
 void setup(){
@@ -56,11 +52,21 @@ void setup(){
  //mqtt.DEBUG = true;
  //mqtt.subscribe("aSmile","gotSmile");
  
+  //colour choices - https://kuler.adobe.com/#themeID/2362707
+colors[0] = color(0,161,154);
+colors[1] = color(4,191,157);
+colors[2] = color(242,232,92);
+colors[3] = color(245,61,84);
+ 
+ 
  triangles = new ArrayList();
  //triangles.add(new SmileTriangle(100,100));
  triangles.add(new SmileTriangle());
  
  
+ 
+
+
 }
 
 void draw(){
@@ -159,9 +165,10 @@ class SmileTriangle {
     int r,g,b;
     color the_color;
     SmileTriangle(){
-        pointA = new PVector(200,200);
-        pointB = new PVector(300,300);
-        pointC = new PVector(100,300);
+        int div = (height/2) - 50; 
+        pointA = new PVector(200,div);
+        pointB = new PVector(300,((div) +100));
+        pointC = new PVector(100,((div) +100));
         
          //use colors from Nathan's design
        
@@ -194,11 +201,16 @@ class SmileTriangle {
        //b = 239;
        
        //r = int(random(215,255));
-       r = int(random(180,255));
-       g = int(random(180,255));
-       b = int(random(180,255));
+       //r = int(random(180,255));
+       //g = int(random(180,255));
+       //b = int(random(180,255));
        
-       the_color = color(r,g,b);  
+       colorCounter++;
+       if (colorCounter == colors.length){
+           colorCounter = 0;
+       }
+    
+       the_color = colors[colorCounter];
     }
     void _setColors(){
         stroke(the_color);
