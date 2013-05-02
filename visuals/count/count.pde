@@ -1,5 +1,5 @@
-int width = 300;
-int height = 300;
+int width = 200;
+int height = 150;
 float theScale = 1;
 
 int segmentCount = 0;
@@ -11,6 +11,12 @@ PFont font;
 boolean firstDraw = true;
 
 int count = 0; 
+
+int colorCounter = 0;
+
+color[] colors = new color[4];
+
+color the_color = color(255,0,0);
 
 //MQTT Parameters
 private MQTTLib m;
@@ -30,7 +36,11 @@ void setup(){
  
  font = loadFont("HelveticaNeue-Light-72.vlw");
  
-
+  //colour choices - https://kuler.adobe.com/#themeID/2362707
+colors[0] = color(0,161,154);
+colors[1] = color(4,191,157);
+colors[2] = color(242,232,92);
+colors[3] = color(245,61,84);
  
  m = new MQTTLib(MQTT_BROKER, new MessageHandler());
  m.connect(CLIENT_ID, CLEAN_START, KEEP_ALIVE);
@@ -42,7 +52,9 @@ void setup(){
 void draw(){
 
   background(39,39,38);
+  smooth();
   //stroke(210, 123, 34);
+  fill(the_color);
   textFont(font, 72);
   textAlign(CENTER);
   text(str(count), ((width/2)), (height/2));
@@ -58,6 +70,13 @@ void keyPressed() {
 
 void createSmile(){
     count++;
+    
+    colorCounter++;
+       if (colorCounter == colors.length){
+           colorCounter = 0;
+       }
+    
+       the_color = colors[colorCounter];
 }
 
 private class MessageHandler implements MqttSimpleCallback {
