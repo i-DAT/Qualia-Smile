@@ -1,5 +1,5 @@
-int width = 200;
-int height = 150;
+int width = 220;
+int height = 360;
 float theScale = 1;
 
 int segmentCount = 0;
@@ -18,6 +18,8 @@ color[] colors = new color[4];
 
 color the_color = color(255,0,0);
 
+PrintWriter logger;
+
 //MQTT Parameters
 private MQTTLib m;
 private String MQTT_BROKER ="tcp://localhost:1883";
@@ -34,7 +36,7 @@ void setup(){
  background(0);
  frameRate(frames);
  
- font = loadFont("HelveticaNeue-Light-72.vlw");
+ font = loadFont("HelveticaNeue-CondensedBold-80.vlw");
  
   //colour choices - https://kuler.adobe.com/#themeID/2362707
 colors[0] = color(0,161,154);
@@ -45,6 +47,8 @@ colors[3] = color(245,61,84);
  m = new MQTTLib(MQTT_BROKER, new MessageHandler());
  m.connect(CLIENT_ID, CLEAN_START, KEEP_ALIVE);
  m.subscribe(TOPICS, QOS);
+ 
+ logger = createWriter(year() + "-" + month()  + "-" + day() + "/" + hour() + "_" + minute() + "_log.txt");
 
  
 }
@@ -55,7 +59,7 @@ void draw(){
   smooth();
   //stroke(210, 123, 34);
   fill(the_color);
-  textFont(font, 72);
+  textFont(font, 80);
   textAlign(CENTER);
   text(str(count), ((width/2)), (height/2));
         
@@ -77,6 +81,9 @@ void createSmile(){
        }
     
        the_color = colors[colorCounter];
+       
+   logger.println(hour() + ":" + minute() + ":" + second() + "." + millis());
+   logger.flush();
 }
 
 private class MessageHandler implements MqttSimpleCallback {
@@ -92,4 +99,7 @@ public void publishArrived( String topicName, byte[] payload, int QoS, boolean r
 
  }
 
-
+void stop() {
+  logger.close();
+  super.stop();
+} 
