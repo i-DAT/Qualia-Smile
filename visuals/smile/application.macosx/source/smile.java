@@ -21,8 +21,8 @@ public class smile extends PApplet {
 ArrayList smiles;
 ArrayList triangles;
 
-int width = 900;
-int height = 360;
+int width = 1024;
+int height = 260;
 float theScale = 1;
 
 int segmentCount = 0;
@@ -40,7 +40,7 @@ int[] colors = new int[4];
 //MQTT Parameters
 private MQTTLib m;
 private String MQTT_BROKER ="tcp://localhost:1883";
-private String CLIENT_ID = "TestProcessing";
+private String CLIENT_ID = "Processing-Smile";
 private int[] QOS = {1};
 private String[] TOPICS = {"smiles"};
 private boolean CLEAN_START = true;
@@ -73,10 +73,10 @@ public void setup(){
  //mqtt.subscribe("aSmile","gotSmile");
  
   //colour choices - https://kuler.adobe.com/#themeID/2362707
-colors[0] = color(0,161,154);
-colors[1] = color(4,191,157);
-colors[2] = color(242,232,92);
-colors[3] = color(245,61,84);
+colors[0] = color(0,161,154,200);
+colors[1] = color(4,191,157,200);
+colors[2] = color(242,232,92,200);
+colors[3] = color(245,61,84,200);
  
  
  triangles = new ArrayList();
@@ -119,7 +119,7 @@ public void draw(){
         //if(segmentCount < 24){
             segmentCount++;
             //println(segmentCount);
-            smile.drawSegment(segmentCount);
+            //smile.drawSegment(segmentCount);
             //textFont(font, 32);
             //text("harvesting", (width/2) - 200, (height/2) - 200);
             //stroke(255,255,255,127);
