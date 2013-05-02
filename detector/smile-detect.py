@@ -6,10 +6,12 @@ import mosquitto
 import threading
 
 cv.NamedWindow("camera", 1)
-capture = cv.CreateCameraCapture(1)
+capture = cv.CreateCameraCapture(0)
 
-width = 320
-height = 240
+#width = int(320 * 1.5)
+#height = int(240 * 1.5)
+width = 640
+height = 360
 smileness = 0
 smilecount = 0
 
@@ -128,16 +130,16 @@ faceCascade = cv.Load("haarcascade_frontalface_alt.xml")
 smileCascade = cv.Load("haarcascade_smile.xml")
 
 while True:
-    if smileness > 70:
+    if smileness > 15:
         smilecount+= 1
     else:
         smilecount = 0
         
-    if smilecount >=40:
+    if smilecount >=4:
         smilecount = 0
         mT.publish()
         print "Got Smile!"
-        time.sleep(5)
+        time.sleep(2)
     
     
     img = cv.QueryFrame(capture)
