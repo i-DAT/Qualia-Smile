@@ -10,15 +10,19 @@ capture = cv.CreateCameraCapture(0)
 
 #width = int(320 * 1.5)
 #height = int(240 * 1.5)
+#To Match MS Lifecam studio
 width = 640
 height = 360
 smileness = 0
 smilecount = 0
 
+smileList = []
+
 smilecolor = cv.RGB(0, 255, 0)
 lowercolor = cv.RGB(0, 0, 255)
 facecolor = cv.RGB(255, 0, 0)
 font = cv.InitFont(1, 1, 1, 1, 1, 1)
+sFont = cv.InitFont(1, 0.7, 0.7, 1, 1, 1)
 
 cv.SetCaptureProperty(capture,cv.CV_CAP_PROP_FRAME_WIDTH,width)    
 cv.SetCaptureProperty(capture,cv.CV_CAP_PROP_FRAME_HEIGHT,height) 
@@ -60,6 +64,8 @@ def DetectRedEyes(image, faceCascade, smileCascade):
     haar_scale = 1.2
     min_neighbors = 2
     haar_flags = 0
+    
+    global smileList
 
     # Allocate the temporary images
     gray = cv.CreateImage((image.width, image.height), 8, 1)
@@ -104,7 +110,7 @@ def DetectRedEyes(image, faceCascade, smileCascade):
             smiles = cv.HaarDetectObjects(image, smileCascade, cv.CreateMemStorage(0), 1.1, 5, 0, (15,15))
         
             if smiles:
-                print smiles
+                smileList.append(str(smiles)[0:25])
             
                 for smile in smiles:
                     cv.Rectangle(image,
@@ -124,6 +130,15 @@ def DetectRedEyes(image, faceCascade, smileCascade):
 
 
     cv.ResetImageROI(image)
+    
+    
+    if smileList.__len__() >= 10:
+        smileList = smileList[-10:]
+    #for smiles in smileList:
+    for idx, val in enumerate(smileList):
+        cv.PutText(image, val, (5,20 * idx), sFont, smilecolor)
+        print idx, val
+        #print smiles
     return image
 
 faceCascade = cv.Load("haarcascade_frontalface_alt.xml")
@@ -139,6 +154,7 @@ while True:
         smilecount = 0
         mT.publish()
         print "Got Smile!"
+        smileList.append("Got Smile!")
         time.sleep(2)
     
     
