@@ -4,6 +4,9 @@ import time
 import Image
 import mosquitto
 import threading
+import requests
+import datetime
+import json
 
 cv.NamedWindow("camera", 1)
 capture = cv.CreateCameraCapture(0)
@@ -15,6 +18,8 @@ width = 640
 height = 360
 smileness = 0
 smilecount = 0
+
+facecount = 0
 
 smileList = []
 
@@ -38,8 +43,42 @@ class mqThread(threading.Thread):
         
         while True:
             self.mqttc.loop()
-    def publish(self):
+    def publishSmile(self):
         self.mqttc.publish("smiles", "smile", 0)
+
+        url = "http://127.0.0.1:8000/api/v1/smile/?api_key=cdf71d349bdc7b306211f4cb7bed2389931d7316&username=admin"
+
+        data = {
+            'probe': '/api/v1/probe/1/',
+            'when': str(datetime.datetime.now())
+        }
+        headers = {'Content-type': 'application/json'}
+        try:
+            r = requests.post(url, data=json.dumps(data), headers=headers)
+        except Exception as e:
+            print e
+
+
+    def publishFace(self):
+        self.mqttc.publish("faces", "face", 0)
+        global facecount
+        facecount += 1
+
+        if facecount > 40:
+            facecount = 0
+
+            url = "http://127.0.0.1:8000/api/v1/face/?api_key=cdf71d349bdc7b306211f4cb7bed2389931d7316&username=admin"
+        
+            data = {
+                'probe': '/api/v1/probe/1/',
+                'when': str(datetime.datetime.now())
+            }
+            headers = {'Content-type': 'application/json'}
+            try:
+                r = requests.post(url, data=json.dumps(data), headers=headers)
+            except Exception as e:
+                print e
+
             
 mT = mqThread()
 mT.start()
@@ -93,6 +132,7 @@ def DetectRedEyes(image, faceCascade, smileCascade):
         # the input to cv.HaarDetectObjects was resized, so scale the
         # bounding box of each face and convert it to two CvPoints
             #print "face"
+            mT.publishFace()
             pt1 = (int(x * image_scale), int(y * image_scale))
             pt2 = (int((x + w) * image_scale), int((y + h) * image_scale))
             cv.Rectangle(image, pt1, pt2, facecolor, 1, 8, 0)
@@ -135,9 +175,9 @@ def DetectRedEyes(image, faceCascade, smileCascade):
     if smileList.__len__() >= 10:
         smileList = smileList[-10:]
     #for smiles in smileList:
-    for idx, val in enumerate(smileList):
-        cv.PutText(image, val, (5,20 * idx), sFont, smilecolor)
-        print idx, val
+    #for idx, val in enumerate(smileList):
+        #cv.PutText(image, val, (5,20 * idx), sFont, smilecolor)
+        #print idx, val
         #print smiles
     return image
 
@@ -152,7 +192,7 @@ while True:
         
     if smilecount >=4:
         smilecount = 0
-        mT.publish()
+        mT.publishSmile()
         print "Got Smile!"
         smileList.append("Got Smile!")
         time.sleep(2)
