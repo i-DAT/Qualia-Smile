@@ -2,7 +2,8 @@
 import cv
 import time
 import Image
-import mosquitto
+#import mosquitto
+import socket
 import threading
 import requests
 import datetime
@@ -11,11 +12,11 @@ import json
 cv.NamedWindow("camera", 1)
 capture = cv.CreateCameraCapture(0)
 
-#width = int(320 * 1.5)
-#height = int(240 * 1.5)
+width = int(320 * 1.5)
+height = int(240 * 1.5)
 #To Match MS Lifecam studio
-width = 640
-height = 360
+#width = 640
+#height = 360
 smileness = 0
 smilecount = 0
 
@@ -36,15 +37,17 @@ result = cv.CreateImage((width,height),cv.IPL_DEPTH_8U,3)
 class mqThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
-        self.mqttc = mosquitto.Mosquitto()
+        self.UDP_IP = "127.0.0.1"
+        self.UDP_PORT = 5005
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+
     def run(self):
-        self.mqttc.connect("127.0.0.1", 1883, 60)
-        print "connected"
-        
-        while True:
-            self.mqttc.loop()
+        print 'set up udp'
+
+
     def publishSmile(self):
-        self.mqttc.publish("smiles", "smile", 0)
+        #self.mqttc.publish("smiles", "smile", 0)
 
         url = "http://127.0.0.1:8000/api/v1/smile/?api_key=cdf71d349bdc7b306211f4cb7bed2389931d7316&username=admin"
 
@@ -60,7 +63,8 @@ class mqThread(threading.Thread):
 
 
     def publishFace(self):
-        self.mqttc.publish("faces", "face", 0)
+        #self.mqttc.publish("faces", "face", 0)
+        self.sock.sendto('face', (self.UDP_IP, self.UDP_PORT))
         global facecount
         facecount += 1
 
